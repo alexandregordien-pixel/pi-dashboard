@@ -1,6 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 
-// ─── DONNÉES INITIALES ───────────────────────────────────────────────────────
+const FONT = "'Inter', sans-serif";
+
+// ─── THÈME ────────────────────────────────────────────────────────────────────
+const T = {
+  bg:          "#eef0f5",
+  surface:     "#ffffff",
+  surfaceAlt:  "#f4f5f9",
+  border:      "#e2e4ed",
+  borderFocus: "#c8cbda",
+  text:        "#1e1e30",
+  textSec:     "#6b7280",
+  textMuted:   "#9ca3af",
+};
+
+// ─── DONNÉES ──────────────────────────────────────────────────────────────────
 const INITIAL_PROJECTS = [
   {
     id: 1, code: "AZM", name: "AZIMUT",
@@ -12,7 +26,12 @@ const INITIAL_PROJECTS = [
       { label: "Article RSI — corrections", url: "https://claude.ai" },
       { label: "Présentation CSIRMT", url: "https://claude.ai" },
     ],
-    color: "#00e5ff", createdAt: "2025-01",
+    timeline: [
+      { date: "Jan 2025", label: "Démarrage du projet" },
+      { date: "Mar 2025", label: "Architecture v2 conçue" },
+      { date: "Mai 2025", label: "Présentation CSIRMT" },
+    ],
+    color: "#00b4cc", createdAt: "2025-01",
   },
   {
     id: 2, code: "RIFC", name: "RIFC AFGSU",
@@ -23,7 +42,12 @@ const INITIAL_PROJECTS = [
       { label: "Génération RIFC complet", url: "https://claude.ai" },
       { label: "Charte graphique militaire", url: "https://claude.ai" },
     ],
-    color: "#69ff47", createdAt: "2025-03",
+    timeline: [
+      { date: "Mar 2025", label: "Démarrage" },
+      { date: "Avr 2025", label: "Génération RIFC complet" },
+      { date: "Avr 2025", label: "Livraison finale" },
+    ],
+    color: "#22a855", createdAt: "2025-03",
   },
   {
     id: 3, code: "CCS", name: "Concours Cadre de Santé",
@@ -34,7 +58,12 @@ const INITIAL_PROJECTS = [
       { label: "CV & compétences 2026", url: "https://claude.ai" },
       { label: "Stratégie TOEIC + M1 ERCE", url: "https://claude.ai" },
     ],
-    color: "#ffd600", createdAt: "2025-02",
+    timeline: [
+      { date: "Fév 2025", label: "Démarrage" },
+      { date: "Sep 2025", label: "CV & compétences 2026" },
+      { date: "Jan 2026", label: "Stratégie TOEIC + M1 ERCE" },
+    ],
+    color: "#d4a017", createdAt: "2025-02",
   },
   {
     id: 4, code: "AFGM", name: "AFGSU-Manager",
@@ -42,7 +71,11 @@ const INITIAL_PROJECTS = [
     status: "pending", tags: ["Grist", "Formation", "BDD"],
     links: { github: "", docs: "https://grist.numerique.gouv.fr" },
     conversations: [{ label: "Audit structurel Grist", url: "https://claude.ai" }],
-    color: "#ff6d00", createdAt: "2025-04",
+    timeline: [
+      { date: "Avr 2025", label: "Démarrage" },
+      { date: "Juin 2025", label: "Audit structurel Grist" },
+    ],
+    color: "#e05a00", createdAt: "2025-04",
   },
   {
     id: 5, code: "DASH", name: "Pi Dashboard",
@@ -50,15 +83,19 @@ const INITIAL_PROJECTS = [
     status: "active", tags: ["React", "Vite", "Raspberry Pi", "Nginx"],
     links: { github: "", docs: "" },
     conversations: [{ label: "Construction dashboard + déploiement", url: "https://claude.ai" }],
-    color: "#e040fb", createdAt: "2026-05",
+    timeline: [
+      { date: "Mai 2026", label: "Démarrage" },
+      { date: "Mai 2026", label: "v1 déployée" },
+    ],
+    color: "#9c27b0", createdAt: "2026-05",
   },
 ];
 
 const STATUS = {
-  active:   { label: "EN COURS",   color: "#00e5ff" },
-  complete: { label: "TERMINÉ",    color: "#69ff47" },
-  pending:  { label: "EN ATTENTE", color: "#ff6d00" },
-  archived: { label: "ARCHIVÉ",    color: "#444" },
+  active:   { label: "En cours",   color: "#0369a1", bg: "#e0f2fe" },
+  complete: { label: "Terminé",    color: "#15803d", bg: "#dcfce7" },
+  pending:  { label: "En attente", color: "#b45309", bg: "#fef3c7" },
+  archived: { label: "Archivé",    color: "#6b7280", bg: "#f3f4f6" },
 };
 
 // ─── CLAUDE API ───────────────────────────────────────────────────────────────
@@ -68,19 +105,18 @@ Tu gères un dashboard de projets. Voici l'état actuel des projets en JSON :
 ${JSON.stringify(projects, null, 2)}
 
 Tu peux répondre de deux façons :
-1. Si l'utilisateur veut MODIFIER les projets (créer, modifier, supprimer, ajouter une conversation, changer un statut, etc.) :
-   Réponds UNIQUEMENT avec un objet JSON valide (sans markdown, sans texte avant/après) :
+1. Si l'utilisateur veut MODIFIER les projets :
+   Réponds UNIQUEMENT avec un objet JSON valide :
    { "action": "update", "projects": [...liste complète mise à jour...], "message": "Ce que tu as fait en une phrase" }
 
-2. Si l'utilisateur pose une QUESTION ou veut un RÉSUMÉ (sans modification) :
+2. Si l'utilisateur pose une QUESTION ou veut un RÉSUMÉ :
    Réponds UNIQUEMENT avec :
    { "action": "info", "message": "Ta réponse ici" }
 
 Règles :
 - Les IDs existants ne changent pas. Les nouveaux projets ont un ID = Date.now()
 - Les statuts possibles : active, complete, pending, archived
-- Sois concis et militaire dans le ton
-- Pour les nouvelles conversations, utilise l'URL https://claude.ai par défaut
+- Chaque projet a un champ timeline : tableau d'objets { date: "Mois YYYY", label: "Description" }
 - JAMAIS de texte hors du JSON`;
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -88,7 +124,7 @@ Règles :
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
+      max_tokens: 1500,
       system: systemPrompt,
       messages: [{ role: "user", content: userMessage }],
     }),
@@ -97,107 +133,256 @@ Règles :
   if (!response.ok) throw new Error(`API error: ${response.status}`);
   const data = await response.json();
   const text = data.content.filter(b => b.type === "text").map(b => b.text).join("");
-  const clean = text.replace(/```json|```/g, "").trim();
-  return JSON.parse(clean);
+  return JSON.parse(text.replace(/```json|```/g, "").trim());
 }
 
-// ─── COMPOSANTS ───────────────────────────────────────────────────────────────
-function ProjectCard({ project, selected, onSelect, onEdit }) {
-  const s = STATUS[project.status];
+// ─── MINI TIMELINE ────────────────────────────────────────────────────────────
+function MiniTimeline({ events, color }) {
+  const [tip, setTip] = useState(null);
+  if (!events || events.length === 0) return null;
+
   return (
-    <div onClick={() => onSelect(project.id)} style={{
-      borderLeft: `3px solid ${project.color}`,
-      border: `1px solid ${selected ? project.color + "88" : "#1e1e1e"}`,
-      borderLeft: `3px solid ${project.color}`,
-      background: selected ? "#111" : "#0a0a0a",
-      borderRadius: "2px", padding: "14px 16px", marginBottom: "8px",
-      cursor: "pointer", transition: "all 0.15s",
-    }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: project.color,
-            background: project.color + "18", padding: "2px 7px", letterSpacing: "2px" }}>
-            {project.code}
-          </span>
-          <span style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, fontSize: "14px", color: "#e0e0e0", letterSpacing: "0.5px" }}>
-            {project.name}
-          </span>
-        </div>
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", color: s.color,
-            border: `1px solid ${s.color}44`, padding: "1px 6px", letterSpacing: "1px" }}>
-            {s.label}
-          </span>
-          <button onClick={e => { e.stopPropagation(); onEdit(project); }}
-            style={{ background: "none", border: "none", color: "#444", cursor: "pointer", fontSize: "13px", lineHeight: 1 }}
-            onMouseEnter={e => e.target.style.color = "#888"}
-            onMouseLeave={e => e.target.style.color = "#444"}>✎</button>
-        </div>
-      </div>
-      <p style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "#666", margin: "0 0 10px", lineHeight: 1.6 }}>
-        {project.description}
-      </p>
-      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-        {project.tags.map(t => (
-          <span key={t} style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", color: "#555",
-            border: "1px solid #222", padding: "1px 6px" }}>{t}</span>
+    <div style={{ position: "relative", marginTop: "14px" }}>
+      {/* Track */}
+      <div style={{
+        position: "absolute",
+        left: "5px", right: "5px", top: "5px",
+        height: "2px",
+        background: `${color}25`,
+        borderRadius: "1px",
+      }} />
+
+      {/* Dots + labels */}
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        {events.map((e, i) => (
+          <div key={i}
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative", cursor: "default" }}
+            onMouseEnter={() => setTip(i)}
+            onMouseLeave={() => setTip(null)}
+          >
+            {/* Tooltip */}
+            {tip === i && (
+              <div style={{
+                position: "absolute", bottom: "30px",
+                left: "50%", transform: "translateX(-50%)",
+                background: T.text, color: "#fff",
+                padding: "5px 10px", borderRadius: "5px",
+                fontSize: "11px", fontFamily: FONT, whiteSpace: "nowrap",
+                boxShadow: "0 3px 12px rgba(0,0,0,0.18)",
+                zIndex: 20,
+                pointerEvents: "none",
+              }}>
+                {e.label}
+                <div style={{
+                  position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)",
+                  width: 0, height: 0,
+                  borderLeft: "5px solid transparent", borderRight: "5px solid transparent",
+                  borderTop: `5px solid ${T.text}`,
+                }} />
+              </div>
+            )}
+
+            {/* Dot */}
+            <div style={{
+              width: "11px", height: "11px", borderRadius: "50%",
+              background: tip === i ? color : T.surface,
+              border: `2px solid ${color}`,
+              transition: "background 0.15s",
+              zIndex: 1,
+              boxShadow: tip === i ? `0 0 0 3px ${color}22` : "none",
+            }} />
+
+            {/* Date label */}
+            <span style={{
+              fontSize: "10px", color: T.textMuted, marginTop: "5px",
+              fontFamily: FONT, whiteSpace: "nowrap",
+            }}>
+              {e.date}
+            </span>
+          </div>
         ))}
       </div>
     </div>
   );
 }
 
-function DetailPanel({ project }) {
-  if (!project) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%",
-      fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "#2a2a2a", letterSpacing: "3px" }}>
-      ← SÉLECTIONNER UN PROJET
+// ─── PROJECT CARD ─────────────────────────────────────────────────────────────
+function ProjectCard({ project, selected, onSelect, onEdit }) {
+  const s = STATUS[project.status];
+  return (
+    <div
+      onClick={() => onSelect(project.id)}
+      style={{
+        background: selected ? T.surfaceAlt : T.surface,
+        border: `1px solid ${selected ? project.color + "55" : T.border}`,
+        borderLeft: `4px solid ${project.color}`,
+        borderRadius: "8px",
+        padding: "16px 18px",
+        marginBottom: "10px",
+        cursor: "pointer",
+        transition: "all 0.15s",
+        boxShadow: selected ? `0 2px 12px ${project.color}18` : "0 1px 3px rgba(0,0,0,0.06)",
+      }}
+    >
+      {/* En-tête */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{
+            fontFamily: FONT, fontSize: "10px", fontWeight: 700,
+            color: project.color, background: `${project.color}18`,
+            padding: "2px 8px", borderRadius: "4px", letterSpacing: "0.5px",
+          }}>
+            {project.code}
+          </span>
+          <span style={{ fontFamily: FONT, fontWeight: 600, fontSize: "15px", color: T.text }}>
+            {project.name}
+          </span>
+        </div>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <span style={{
+            fontFamily: FONT, fontSize: "11px", fontWeight: 500,
+            color: s.color, background: s.bg,
+            padding: "2px 9px", borderRadius: "20px",
+          }}>
+            {s.label}
+          </span>
+          <button
+            onClick={e => { e.stopPropagation(); onEdit(project); }}
+            style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: "14px", lineHeight: 1, padding: "2px" }}
+            onMouseEnter={e => e.target.style.color = T.textSec}
+            onMouseLeave={e => e.target.style.color = T.textMuted}
+          >✎</button>
+        </div>
+      </div>
+
+      {/* Description */}
+      <p style={{ fontFamily: FONT, fontSize: "13px", color: T.textSec, margin: "0 0 10px", lineHeight: 1.6 }}>
+        {project.description}
+      </p>
+
+      {/* Tags */}
+      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
+        {project.tags.map(t => (
+          <span key={t} style={{
+            fontFamily: FONT, fontSize: "11px", color: T.textSec,
+            background: T.surfaceAlt, border: `1px solid ${T.border}`,
+            padding: "1px 8px", borderRadius: "4px",
+          }}>{t}</span>
+        ))}
+      </div>
+
+      {/* Timeline */}
+      <MiniTimeline events={project.timeline} color={project.color} />
     </div>
   );
+}
+
+// ─── DETAIL PANEL ─────────────────────────────────────────────────────────────
+function DetailPanel({ project }) {
+  if (!project) return (
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      height: "100%", gap: "10px",
+    }}>
+      <span style={{ fontSize: "28px", opacity: 0.15 }}>←</span>
+      <span style={{ fontFamily: FONT, fontSize: "13px", color: T.textMuted }}>Sélectionner un projet</span>
+    </div>
+  );
+
+  const s = STATUS[project.status];
+
   return (
-    <div style={{ padding: "20px" }}>
-      <div style={{ borderBottom: "1px solid #1a1a1a", paddingBottom: "14px", marginBottom: "20px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: project.color,
-            background: project.color + "18", padding: "2px 8px", letterSpacing: "2px" }}>{project.code}</span>
-          <span style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, fontSize: "16px", color: "#fff" }}>{project.name}</span>
+    <div style={{ padding: "28px 32px" }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: "28px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+          <span style={{
+            fontFamily: FONT, fontSize: "11px", fontWeight: 700,
+            color: project.color, background: `${project.color}18`,
+            padding: "3px 10px", borderRadius: "4px", letterSpacing: "0.5px",
+          }}>{project.code}</span>
+          <span style={{ fontFamily: FONT, fontWeight: 700, fontSize: "20px", color: T.text }}>{project.name}</span>
+          <span style={{
+            marginLeft: "auto", fontFamily: FONT, fontSize: "11px", fontWeight: 500,
+            color: s.color, background: s.bg, padding: "3px 10px", borderRadius: "20px",
+          }}>{s.label}</span>
         </div>
-        <p style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "#666", margin: 0, lineHeight: 1.6 }}>
+        <p style={{ fontFamily: FONT, fontSize: "13px", color: T.textSec, margin: 0, lineHeight: 1.7 }}>
           {project.description}
         </p>
       </div>
 
-      <div style={{ marginBottom: "20px" }}>
-        <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", color: "#444", letterSpacing: "2px", marginBottom: "10px" }}>
-          CONVERSATIONS CLAUDE
+      {/* Timeline complète */}
+      {project.timeline && project.timeline.length > 0 && (
+        <div style={{ marginBottom: "28px" }}>
+          <div style={{ fontFamily: FONT, fontSize: "11px", fontWeight: 600, color: T.textMuted,
+            textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>
+            Chronologie
+          </div>
+          <div style={{ position: "relative", paddingLeft: "16px" }}>
+            {/* Ligne verticale */}
+            <div style={{
+              position: "absolute", left: "4px", top: "6px", bottom: "6px",
+              width: "2px", background: `${project.color}25`, borderRadius: "1px",
+            }} />
+            {project.timeline.map((e, i) => (
+              <div key={i} style={{ display: "flex", gap: "14px", alignItems: "flex-start", marginBottom: "14px", position: "relative" }}>
+                <div style={{
+                  position: "absolute", left: "-20px", top: "4px",
+                  width: "10px", height: "10px", borderRadius: "50%",
+                  background: T.surface, border: `2px solid ${project.color}`,
+                }} />
+                <div>
+                  <span style={{ fontFamily: FONT, fontSize: "11px", fontWeight: 600, color: project.color }}>{e.date}</span>
+                  <span style={{ fontFamily: FONT, fontSize: "13px", color: T.textSec, marginLeft: "10px" }}>{e.label}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Conversations */}
+      <div style={{ marginBottom: "24px" }}>
+        <div style={{ fontFamily: FONT, fontSize: "11px", fontWeight: 600, color: T.textMuted,
+          textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px" }}>
+          Conversations Claude
         </div>
         {project.conversations.length === 0
-          ? <p style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "#333" }}>Aucune conversation.</p>
+          ? <p style={{ fontFamily: FONT, fontSize: "13px", color: T.textMuted }}>Aucune conversation.</p>
           : project.conversations.map((c, i) => (
             <a key={i} href={c.url} target="_blank" rel="noopener noreferrer" style={{
-              display: "block", fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "#aaa",
-              textDecoration: "none", padding: "9px 12px", marginBottom: "5px",
-              borderLeft: `2px solid ${project.color}`, border: `1px solid #1a1a1a`,
-              borderLeft: `2px solid ${project.color}`, background: "#0d0d0d", transition: "all 0.15s",
+              display: "flex", alignItems: "center", gap: "10px",
+              fontFamily: FONT, fontSize: "13px", color: T.textSec,
+              textDecoration: "none", padding: "10px 14px", marginBottom: "6px",
+              background: T.surfaceAlt, border: `1px solid ${T.border}`,
+              borderLeft: `3px solid ${project.color}`,
+              borderRadius: "0 6px 6px 0", transition: "all 0.15s",
             }}
-              onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "#141414"; }}
-              onMouseLeave={e => { e.currentTarget.style.color = "#aaa"; e.currentTarget.style.background = "#0d0d0d"; }}>
-              <span style={{ color: "#444", marginRight: "8px" }}>↗</span>{c.label}
+              onMouseEnter={e => { e.currentTarget.style.background = "#eef6ff"; e.currentTarget.style.color = T.text; }}
+              onMouseLeave={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.color = T.textSec; }}>
+              <span style={{ color: project.color, fontSize: "12px" }}>↗</span>
+              {c.label}
             </a>
           ))}
       </div>
 
+      {/* Liens */}
       {project.links.github && (
-        <div style={{ marginBottom: "16px" }}>
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", color: "#444", letterSpacing: "2px", marginBottom: "10px" }}>
-            GITHUB
+        <div style={{ marginBottom: "18px" }}>
+          <div style={{ fontFamily: FONT, fontSize: "11px", fontWeight: 600, color: T.textMuted,
+            textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px" }}>
+            GitHub
           </div>
           <a href={project.links.github} target="_blank" rel="noopener noreferrer" style={{
-            display: "block", fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "#aaa",
-            textDecoration: "none", padding: "9px 12px", border: "1px solid #1a1a1a",
-            borderLeft: "2px solid #444", background: "#0d0d0d", wordBreak: "break-all",
+            display: "flex", alignItems: "center", gap: "10px",
+            fontFamily: FONT, fontSize: "13px", color: T.textSec,
+            textDecoration: "none", padding: "10px 14px",
+            background: T.surfaceAlt, border: `1px solid ${T.border}`,
+            borderRadius: "6px", wordBreak: "break-all",
           }}>
-            <span style={{ color: "#444", marginRight: "8px" }}>⌥</span>
+            <span>⌥</span>
             {project.links.github.replace("https://", "")}
           </a>
         </div>
@@ -205,15 +390,18 @@ function DetailPanel({ project }) {
 
       {project.links.docs && (
         <div>
-          <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px", color: "#444", letterSpacing: "2px", marginBottom: "10px" }}>
-            DOCUMENTATION
+          <div style={{ fontFamily: FONT, fontSize: "11px", fontWeight: 600, color: T.textMuted,
+            textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px" }}>
+            Documentation
           </div>
           <a href={project.links.docs} target="_blank" rel="noopener noreferrer" style={{
-            display: "block", fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "#aaa",
-            textDecoration: "none", padding: "9px 12px", border: "1px solid #1a1a1a",
-            borderLeft: "2px solid #444", background: "#0d0d0d",
+            display: "flex", alignItems: "center", gap: "10px",
+            fontFamily: FONT, fontSize: "13px", color: T.textSec,
+            textDecoration: "none", padding: "10px 14px",
+            background: T.surfaceAlt, border: `1px solid ${T.border}`,
+            borderRadius: "6px",
           }}>
-            <span style={{ color: "#444", marginRight: "8px" }}>⊞</span>
+            <span>⊞</span>
             {project.links.docs.replace("https://", "")}
           </a>
         </div>
@@ -222,89 +410,131 @@ function DetailPanel({ project }) {
   );
 }
 
+// ─── EDIT MODAL ───────────────────────────────────────────────────────────────
 function EditModal({ project, onSave, onClose }) {
-  const [form, setForm] = useState({ ...project, links: { ...project.links } });
+  const [form, setForm] = useState({ ...project, links: { ...project.links }, timeline: [...(project.timeline || [])] });
   const [newConv, setNewConv] = useState({ label: "", url: "" });
+  const [newEvent, setNewEvent] = useState({ date: "", label: "" });
   const u = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const ul = (k, v) => setForm(f => ({ ...f, links: { ...f.links, [k]: v } }));
+
   const addConv = () => {
     if (!newConv.label) return;
     setForm(f => ({ ...f, conversations: [...f.conversations, { ...newConv, url: newConv.url || "https://claude.ai" }] }));
     setNewConv({ label: "", url: "" });
   };
-  const inp = (val, onChange, ph) => (
+  const addEvent = () => {
+    if (!newEvent.label) return;
+    setForm(f => ({ ...f, timeline: [...f.timeline, { ...newEvent }] }));
+    setNewEvent({ date: "", label: "" });
+  };
+
+  const inp = (val, onChange, ph, flex) => (
     <input value={val} onChange={e => onChange(e.target.value)} placeholder={ph} style={{
-      width: "100%", boxSizing: "border-box", background: "#0d0d0d",
-      border: "1px solid #222", color: "#ccc", fontFamily: "'Share Tech Mono', monospace",
-      fontSize: "11px", padding: "7px 10px", outline: "none", borderRadius: "1px",
+      flex: flex || "none", width: flex ? undefined : "100%", boxSizing: "border-box",
+      background: T.surfaceAlt, border: `1px solid ${T.border}`,
+      color: T.text, fontFamily: FONT, fontSize: "13px",
+      padding: "8px 12px", outline: "none", borderRadius: "6px",
     }} />
   );
 
+  const label = (txt) => (
+    <div style={{ fontSize: "11px", fontWeight: 600, color: T.textMuted,
+      textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>{txt}</div>
+  );
+
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", display: "flex",
+    <div style={{ position: "fixed", inset: 0, background: "rgba(30,30,48,0.5)", display: "flex",
       alignItems: "center", justifyContent: "center", zIndex: 1000 }} onClick={onClose}>
-      <div style={{ background: "#0a0a0a", border: `1px solid ${form.color}44`,
-        borderTop: `2px solid ${form.color}`, padding: "24px", width: "480px",
-        maxHeight: "85vh", overflowY: "auto", fontFamily: "'Share Tech Mono', monospace" }}
+      <div style={{ background: T.surface, border: `1px solid ${T.border}`,
+        borderTop: `3px solid ${form.color}`, padding: "28px", width: "520px",
+        maxHeight: "88vh", overflowY: "auto", fontFamily: FONT, borderRadius: "8px",
+        boxShadow: "0 8px 40px rgba(0,0,0,0.18)" }}
         onClick={e => e.stopPropagation()}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "18px" }}>
-          <span style={{ fontSize: "10px", color: "#666", letterSpacing: "2px" }}>ÉDITION PROJET</span>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: "#555", cursor: "pointer" }}>✕</button>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+          <span style={{ fontSize: "15px", fontWeight: 600, color: T.text }}>Édition du projet</span>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: "18px" }}>✕</button>
         </div>
-        {[["CODE", "code", "AZM"], ["NOM", "name", "Nom"], ["DESCRIPTION", "description", "Description"]].map(([l, k, p]) => (
-          <div key={k} style={{ marginBottom: "10px" }}>
-            <div style={{ fontSize: "9px", color: "#444", letterSpacing: "2px", marginBottom: "4px" }}>{l}</div>
+
+        {[["Code", "code", "AZM"], ["Nom", "name", "Nom du projet"], ["Description", "description", "Description courte"]].map(([l, k, p]) => (
+          <div key={k} style={{ marginBottom: "14px" }}>
+            {label(l)}
             {inp(form[k], v => u(k, v), p)}
           </div>
         ))}
-        <div style={{ marginBottom: "10px" }}>
-          <div style={{ fontSize: "9px", color: "#444", letterSpacing: "2px", marginBottom: "4px" }}>STATUT</div>
+
+        <div style={{ marginBottom: "14px" }}>
+          {label("Statut")}
           <select value={form.status} onChange={e => u("status", e.target.value)} style={{
-            background: "#0d0d0d", border: "1px solid #222", color: "#ccc",
-            fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", padding: "7px 10px", outline: "none",
+            background: T.surfaceAlt, border: `1px solid ${T.border}`, color: T.text,
+            fontFamily: FONT, fontSize: "13px", padding: "8px 12px", outline: "none", borderRadius: "6px",
           }}>
             {Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select>
         </div>
-        <div style={{ marginBottom: "10px" }}>
-          <div style={{ fontSize: "9px", color: "#444", letterSpacing: "2px", marginBottom: "4px" }}>COULEUR</div>
+
+        <div style={{ marginBottom: "14px" }}>
+          {label("Couleur accent")}
           <input type="color" value={form.color} onChange={e => u("color", e.target.value)}
-            style={{ border: "1px solid #222", background: "none", padding: "2px", width: "40px", height: "26px", cursor: "pointer" }} />
+            style={{ border: `1px solid ${T.border}`, background: "none", padding: "2px", width: "44px", height: "32px", cursor: "pointer", borderRadius: "6px" }} />
         </div>
-        <div style={{ marginBottom: "10px" }}>
-          <div style={{ fontSize: "9px", color: "#444", letterSpacing: "2px", marginBottom: "4px" }}>GITHUB URL</div>
+
+        <div style={{ marginBottom: "14px" }}>
+          {label("GitHub URL")}
           {inp(form.links.github, v => ul("github", v), "https://github.com/...")}
         </div>
-        <div style={{ marginBottom: "16px" }}>
-          <div style={{ fontSize: "9px", color: "#444", letterSpacing: "2px", marginBottom: "8px" }}>CONVERSATIONS</div>
+
+        <div style={{ marginBottom: "20px" }}>
+          {label("Conversations")}
           {form.conversations.map((c, i) => (
             <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
-              padding: "5px 8px", marginBottom: "4px", background: "#0d0d0d", border: "1px solid #1a1a1a" }}>
-              <span style={{ fontSize: "10px", color: "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "85%" }}>{c.label}</span>
+              padding: "8px 12px", marginBottom: "5px", background: T.surfaceAlt,
+              border: `1px solid ${T.border}`, borderRadius: "6px" }}>
+              <span style={{ fontSize: "13px", color: T.textSec, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "85%" }}>{c.label}</span>
               <button onClick={() => setForm(f => ({ ...f, conversations: f.conversations.filter((_, j) => j !== i) }))}
-                style={{ background: "none", border: "none", color: "#444", cursor: "pointer", fontSize: "11px" }}>✕</button>
+                style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: "13px" }}>✕</button>
             </div>
           ))}
-          <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
-            <input value={newConv.label} onChange={e => setNewConv(n => ({ ...n, label: e.target.value }))}
-              placeholder="Libellé" style={{ flex: 1, background: "#0d0d0d", border: "1px solid #222",
-                color: "#ccc", fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", padding: "6px 8px", outline: "none" }} />
-            <input value={newConv.url} onChange={e => setNewConv(n => ({ ...n, url: e.target.value }))}
-              placeholder="URL (optionnel)" style={{ flex: 2, background: "#0d0d0d", border: "1px solid #222",
-                color: "#ccc", fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", padding: "6px 8px", outline: "none" }} />
-            <button onClick={addConv} style={{ background: "#111", border: "1px solid #2a2a2a", color: "#888",
-              fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", padding: "6px 10px", cursor: "pointer" }}>+</button>
+          <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+            {inp(newConv.label, v => setNewConv(n => ({ ...n, label: v })), "Libellé", "1")}
+            {inp(newConv.url, v => setNewConv(n => ({ ...n, url: v })), "URL", "2")}
+            <button onClick={addConv} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`,
+              color: T.textSec, fontFamily: FONT, fontSize: "13px", padding: "8px 14px",
+              cursor: "pointer", borderRadius: "6px" }}>+</button>
           </div>
         </div>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-          <button onClick={onClose} style={{ background: "none", border: "1px solid #2a2a2a", color: "#666",
-            fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", padding: "7px 16px", cursor: "pointer", letterSpacing: "1px" }}>
-            ANNULER
+
+        <div style={{ marginBottom: "24px" }}>
+          {label("Chronologie")}
+          {form.timeline.map((e, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
+              padding: "8px 12px", marginBottom: "5px", background: T.surfaceAlt,
+              border: `1px solid ${T.border}`, borderRadius: "6px" }}>
+              <span style={{ fontSize: "11px", fontWeight: 600, color: form.color, marginRight: "10px" }}>{e.date}</span>
+              <span style={{ fontSize: "13px", color: T.textSec, flex: 1 }}>{e.label}</span>
+              <button onClick={() => setForm(f => ({ ...f, timeline: f.timeline.filter((_, j) => j !== i) }))}
+                style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: "13px" }}>✕</button>
+            </div>
+          ))}
+          <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+            {inp(newEvent.date, v => setNewEvent(n => ({ ...n, date: v })), "Mois YYYY", "none")}
+            {inp(newEvent.label, v => setNewEvent(n => ({ ...n, label: v })), "Événement", "2")}
+            <button onClick={addEvent} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`,
+              color: T.textSec, fontFamily: FONT, fontSize: "13px", padding: "8px 14px",
+              cursor: "pointer", borderRadius: "6px" }}>+</button>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+          <button onClick={onClose} style={{ background: "none", border: `1px solid ${T.border}`, color: T.textSec,
+            fontFamily: FONT, fontSize: "13px", padding: "9px 20px", cursor: "pointer", borderRadius: "6px" }}>
+            Annuler
           </button>
-          <button onClick={() => onSave(form)} style={{ background: form.color + "15", border: `1px solid ${form.color}44`,
-            color: form.color, fontFamily: "'Share Tech Mono', monospace", fontSize: "10px",
-            padding: "7px 16px", cursor: "pointer", letterSpacing: "1px" }}>
-            SAUVEGARDER
+          <button onClick={() => onSave(form)} style={{
+            background: form.color, border: "none",
+            color: "#fff", fontFamily: FONT, fontSize: "13px", fontWeight: 600,
+            padding: "9px 20px", cursor: "pointer", borderRadius: "6px" }}>
+            Sauvegarder
           </button>
         </div>
       </div>
@@ -312,35 +542,39 @@ function EditModal({ project, onSave, onClose }) {
   );
 }
 
+// ─── API KEY MODAL ────────────────────────────────────────────────────────────
 function ApiKeyModal({ onSave, onClose }) {
   const [key, setKey] = useState("");
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", display: "flex",
+    <div style={{ position: "fixed", inset: 0, background: "rgba(30,30,48,0.5)", display: "flex",
       alignItems: "center", justifyContent: "center", zIndex: 2000 }} onClick={onClose}>
-      <div style={{ background: "#0a0a0a", border: "1px solid #00e5ff44", borderTop: "2px solid #00e5ff",
-        padding: "28px", width: "420px", fontFamily: "'Share Tech Mono', monospace" }}
+      <div style={{ background: T.surface, border: `1px solid ${T.border}`,
+        borderTop: "3px solid #0369a1", padding: "32px", width: "440px",
+        fontFamily: FONT, borderRadius: "8px", boxShadow: "0 8px 40px rgba(0,0,0,0.18)" }}
         onClick={e => e.stopPropagation()}>
-        <div style={{ fontSize: "10px", color: "#00e5ff", letterSpacing: "2px", marginBottom: "16px" }}>
-          CLÉ API ANTHROPIC
+        <div style={{ fontSize: "15px", fontWeight: 600, color: T.text, marginBottom: "12px" }}>
+          Clé API Anthropic
         </div>
-        <p style={{ fontSize: "10px", color: "#666", lineHeight: 1.7, marginBottom: "16px" }}>
+        <p style={{ fontSize: "13px", color: T.textSec, lineHeight: 1.7, marginBottom: "20px" }}>
           Pour activer l'assistant Claude dans le dashboard, entre ta clé API Anthropic.
           Elle sera stockée uniquement en mémoire de session (non persistée).
         </p>
         <input value={key} onChange={e => setKey(e.target.value)}
           type="password" placeholder="sk-ant-api03-..."
-          style={{ width: "100%", boxSizing: "border-box", background: "#0d0d0d", border: "1px solid #222",
-            color: "#ccc", fontFamily: "'Share Tech Mono', monospace", fontSize: "11px",
-            padding: "9px 12px", outline: "none", marginBottom: "16px" }} />
-        <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-          <button onClick={onClose} style={{ background: "none", border: "1px solid #2a2a2a", color: "#666",
-            fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", padding: "7px 14px", cursor: "pointer" }}>
-            ANNULER
+          style={{ width: "100%", boxSizing: "border-box", background: T.surfaceAlt,
+            border: `1px solid ${T.border}`, color: T.text, fontFamily: FONT, fontSize: "13px",
+            padding: "10px 14px", outline: "none", marginBottom: "20px", borderRadius: "6px" }} />
+        <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+          <button onClick={onClose} style={{ background: "none", border: `1px solid ${T.border}`,
+            color: T.textSec, fontFamily: FONT, fontSize: "13px", padding: "9px 20px",
+            cursor: "pointer", borderRadius: "6px" }}>
+            Annuler
           </button>
           <button onClick={() => key.trim() && onSave(key.trim())} style={{
-            background: "#00e5ff15", border: "1px solid #00e5ff44", color: "#00e5ff",
-            fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", padding: "7px 14px", cursor: "pointer", letterSpacing: "1px" }}>
-            CONFIRMER
+            background: "#0369a1", border: "none", color: "#fff",
+            fontFamily: FONT, fontSize: "13px", fontWeight: 600,
+            padding: "9px 20px", cursor: "pointer", borderRadius: "6px" }}>
+            Confirmer
           </button>
         </div>
       </div>
@@ -359,7 +593,6 @@ export default function App() {
   const [cmd, setCmd] = useState("");
   const [cmdHistory, setCmdHistory] = useState([]);
   const [loading, setLoading] = useState(false);
-  const cmdRef = useRef(null);
   const historyRef = useRef(null);
 
   const filtered = filter === "all" ? projects : projects.filter(p => p.status === filter);
@@ -372,17 +605,13 @@ export default function App() {
   const handleCmd = async () => {
     if (!cmd.trim()) return;
     if (!apiKey) { setShowApiModal(true); return; }
-
     const userMsg = cmd.trim();
     setCmd("");
     setCmdHistory(h => [...h, { role: "user", text: userMsg }]);
     setLoading(true);
-
     try {
       const result = await askClaude(userMsg, projects, apiKey);
-      if (result.action === "update") {
-        setProjects(result.projects);
-      }
+      if (result.action === "update") setProjects(result.projects);
       setCmdHistory(h => [...h, { role: "assistant", text: result.message }]);
     } catch (e) {
       setCmdHistory(h => [...h, { role: "error", text: `Erreur : ${e.message}` }]);
@@ -394,65 +623,70 @@ export default function App() {
   const activeCount = projects.filter(p => p.status === "active").length;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#080808", color: "#ccc",
-      fontFamily: "'Share Tech Mono', monospace", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: FONT, display: "flex", flexDirection: "column" }}>
 
       {/* HEADER */}
-      <div style={{ borderBottom: "1px solid #141414", padding: "12px 24px",
-        display: "flex", alignItems: "center", justifyContent: "space-between", background: "#090909" }}>
+      <div style={{ background: T.surface, borderBottom: `1px solid ${T.border}`, padding: "14px 28px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <span style={{ fontSize: "9px", color: "#00e5ff", letterSpacing: "4px", fontWeight: "bold" }}>
-            ALEXANDRE GORDIEN
-          </span>
-          <span style={{ color: "#1a1a1a" }}>|</span>
-          <span style={{ fontSize: "9px", color: "#444", letterSpacing: "2px" }}>TABLEAU DE BORD PROJETS</span>
+          <span style={{ fontSize: "14px", fontWeight: 700, color: T.text }}>Alexandre Gordien</span>
+          <span style={{ color: T.border }}>|</span>
+          <span style={{ fontSize: "13px", color: T.textSec }}>Tableau de bord projets</span>
         </div>
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <span style={{ fontSize: "9px", color: "#333", letterSpacing: "1px" }}>
-            {activeCount} ACTIFS · {projects.length} TOTAL
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <span style={{ fontSize: "12px", color: T.textMuted }}>
+            {activeCount} actifs · {projects.length} total
           </span>
           <button onClick={() => setShowApiModal(true)} style={{
-            background: apiKey ? "#00e5ff15" : "none",
-            border: `1px solid ${apiKey ? "#00e5ff44" : "#1e1e1e"}`,
-            color: apiKey ? "#00e5ff" : "#444", fontFamily: "'Share Tech Mono', monospace",
-            fontSize: "9px", padding: "4px 10px", cursor: "pointer", letterSpacing: "1px",
+            background: apiKey ? "#e0f2fe" : T.surfaceAlt,
+            border: `1px solid ${apiKey ? "#bae6fd" : T.border}`,
+            color: apiKey ? "#0369a1" : T.textSec,
+            fontFamily: FONT, fontSize: "12px", fontWeight: 500,
+            padding: "5px 12px", cursor: "pointer", borderRadius: "6px",
           }}>
-            {apiKey ? "● API OK" : "○ API KEY"}
+            {apiKey ? "● API connectée" : "○ API Key"}
           </button>
           <button onClick={() => {
-            const newP = { id: Date.now(), code: "NEW", name: "Nouveau Projet",
+            const newP = {
+              id: Date.now(), code: "NEW", name: "Nouveau Projet",
               description: "Description", status: "pending", tags: [],
-              links: { github: "", docs: "" }, conversations: [], color: "#888", createdAt: new Date().toISOString().slice(0,7) };
+              links: { github: "", docs: "" }, conversations: [], timeline: [],
+              color: "#6b7280", createdAt: new Date().toISOString().slice(0, 7),
+            };
             setProjects(p => [newP, ...p]); setEditing(newP);
-          }} style={{ background: "none", border: "1px solid #1e1e1e", color: "#666",
-            fontFamily: "'Share Tech Mono', monospace", fontSize: "9px",
-            padding: "4px 10px", cursor: "pointer", letterSpacing: "1px",
-            transition: "all 0.15s" }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "#444"; e.currentTarget.style.color = "#ccc"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = "#1e1e1e"; e.currentTarget.style.color = "#666"; }}>
-            + NOUVEAU
+          }} style={{
+            background: T.surfaceAlt, border: `1px solid ${T.border}`, color: T.textSec,
+            fontFamily: FONT, fontSize: "12px", fontWeight: 500,
+            padding: "5px 12px", cursor: "pointer", borderRadius: "6px", transition: "all 0.15s",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.border; e.currentTarget.style.color = T.text; }}
+            onMouseLeave={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.color = T.textSec; }}>
+            + Nouveau
           </button>
         </div>
       </div>
 
       {/* FILTRES */}
-      <div style={{ display: "flex", borderBottom: "1px solid #0e0e0e", background: "#090909" }}>
-        {[["all", "TOUS"], ...Object.entries(STATUS).map(([k, v]) => [k, v.label])].map(([k, l]) => (
+      <div style={{ background: T.surface, borderBottom: `1px solid ${T.border}`, display: "flex", paddingLeft: "16px" }}>
+        {[["all", "Tous"], ...Object.entries(STATUS).map(([k, v]) => [k, v.label])].map(([k, l]) => (
           <button key={k} onClick={() => setFilter(k)} style={{
-            background: "none", border: "none", borderBottom: filter === k ? "2px solid #00e5ff" : "2px solid transparent",
-            color: filter === k ? "#e0e0e0" : "#444", fontFamily: "'Share Tech Mono', monospace",
-            fontSize: "9px", padding: "8px 14px", cursor: "pointer", letterSpacing: "1.5px",
+            background: "none", border: "none",
+            borderBottom: filter === k ? "2px solid #0369a1" : "2px solid transparent",
+            color: filter === k ? "#0369a1" : T.textSec,
+            fontFamily: FONT, fontSize: "12px", fontWeight: filter === k ? 600 : 400,
+            padding: "10px 16px", cursor: "pointer", transition: "color 0.1s",
           }}>{l}</button>
         ))}
       </div>
 
-      {/* LAYOUT PRINCIPAL */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", flex: 1, overflow: "hidden" }}>
+      {/* LAYOUT 50/50 */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", flex: 1, overflow: "hidden" }}>
 
-        {/* LISTE PROJETS */}
-        <div style={{ overflowY: "auto", padding: "16px 20px", borderRight: "1px solid #0e0e0e" }}>
+        {/* LISTE */}
+        <div style={{ overflowY: "auto", padding: "20px 24px", borderRight: `1px solid ${T.border}` }}>
           {filtered.length === 0
-            ? <div style={{ color: "#2a2a2a", fontSize: "10px", letterSpacing: "2px", textAlign: "center", marginTop: "40px" }}>AUCUN PROJET</div>
+            ? <div style={{ color: T.textMuted, fontSize: "13px", textAlign: "center", marginTop: "48px" }}>Aucun projet</div>
             : filtered.map(p => (
               <ProjectCard key={p.id} project={p} selected={selected === p.id}
                 onSelect={id => setSelected(s => s === id ? null : id)}
@@ -460,49 +694,53 @@ export default function App() {
             ))}
         </div>
 
-        {/* PANEL DÉTAIL */}
-        <div style={{ overflowY: "auto", background: "#090909" }}>
+        {/* DÉTAIL */}
+        <div style={{ overflowY: "auto", background: T.surface }}>
           <DetailPanel project={selectedProject} />
         </div>
       </div>
 
-      {/* BARRE COMMANDE CLAUDE */}
-      <div style={{ borderTop: "1px solid #141414", background: "#090909" }}>
+      {/* BARRE CLAUDE */}
+      <div style={{ borderTop: `1px solid ${T.border}`, background: T.surface, boxShadow: "0 -1px 4px rgba(0,0,0,0.04)" }}>
         {cmdHistory.length > 0 && (
-          <div ref={historyRef} style={{ maxHeight: "120px", overflowY: "auto", padding: "10px 20px",
-            borderBottom: "1px solid #0e0e0e" }}>
+          <div ref={historyRef} style={{ maxHeight: "120px", overflowY: "auto", padding: "10px 24px",
+            borderBottom: `1px solid ${T.border}` }}>
             {cmdHistory.map((m, i) => (
-              <div key={i} style={{ marginBottom: "5px", display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                <span style={{ fontSize: "9px", color: m.role === "user" ? "#00e5ff" : m.role === "error" ? "#ff4444" : "#69ff47",
-                  letterSpacing: "1px", minWidth: "60px", marginTop: "1px" }}>
-                  {m.role === "user" ? "YOU >" : m.role === "error" ? "ERR >" : "CLD >"}
+              <div key={i} style={{ marginBottom: "6px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                <span style={{
+                  fontSize: "11px", fontWeight: 600, minWidth: "55px", marginTop: "2px",
+                  color: m.role === "user" ? "#0369a1" : m.role === "error" ? "#dc2626" : "#15803d",
+                }}>
+                  {m.role === "user" ? "Vous" : m.role === "error" ? "Erreur" : "Claude"}
                 </span>
-                <span style={{ fontSize: "10px", color: m.role === "error" ? "#ff4444" : "#888", lineHeight: 1.5 }}>{m.text}</span>
+                <span style={{ fontSize: "13px", color: m.role === "error" ? "#dc2626" : T.textSec, lineHeight: 1.5 }}>
+                  {m.text}
+                </span>
               </div>
             ))}
           </div>
         )}
-        <div style={{ display: "flex", alignItems: "center", padding: "10px 20px", gap: "12px" }}>
-          <span style={{ fontSize: "9px", color: "#00e5ff", letterSpacing: "2px" }}>CLAUDE &gt;</span>
+        <div style={{ display: "flex", alignItems: "center", padding: "12px 24px", gap: "12px" }}>
+          <span style={{ fontSize: "12px", fontWeight: 600, color: "#0369a1" }}>Claude</span>
+          <span style={{ color: T.border }}>›</span>
           <input
-            ref={cmdRef}
             value={cmd}
             onChange={e => setCmd(e.target.value)}
             onKeyDown={e => e.key === "Enter" && !loading && handleCmd()}
-            placeholder={apiKey ? "Crée un projet... / Ajoute une conv... / Résume les projets actifs..." : "Configure la clé API pour activer l'assistant →"}
+            placeholder={apiKey ? "Crée un projet... / Ajoute un événement... / Résume les projets actifs..." : "Configure la clé API pour activer l'assistant →"}
             disabled={loading}
-            style={{ flex: 1, background: "none", border: "none", color: "#ccc",
-              fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", outline: "none",
-              opacity: loading ? 0.5 : 1 }}
+            style={{ flex: 1, background: "none", border: "none", color: T.text,
+              fontFamily: FONT, fontSize: "13px", outline: "none", opacity: loading ? 0.5 : 1 }}
           />
           {loading
-            ? <span style={{ fontSize: "9px", color: "#444", letterSpacing: "2px" }}>TRAITEMENT...</span>
-            : <button onClick={handleCmd} style={{ background: "none", border: "1px solid #1e1e1e",
-                color: "#444", fontFamily: "'Share Tech Mono', monospace", fontSize: "9px",
-                padding: "4px 10px", cursor: "pointer", letterSpacing: "1px" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "#00e5ff44"; e.currentTarget.style.color = "#00e5ff"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "#1e1e1e"; e.currentTarget.style.color = "#444"; }}>
-                ENVOYER
+            ? <span style={{ fontSize: "12px", color: T.textMuted }}>Traitement…</span>
+            : <button onClick={handleCmd} style={{
+                background: T.surfaceAlt, border: `1px solid ${T.border}`,
+                color: T.textSec, fontFamily: FONT, fontSize: "12px", fontWeight: 500,
+                padding: "5px 14px", cursor: "pointer", borderRadius: "6px" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#e0f2fe"; e.currentTarget.style.color = "#0369a1"; e.currentTarget.style.borderColor = "#bae6fd"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.color = T.textSec; e.currentTarget.style.borderColor = T.border; }}>
+                Envoyer
               </button>}
         </div>
       </div>
