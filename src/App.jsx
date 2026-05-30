@@ -2,6 +2,26 @@ import { useState, useRef, useEffect } from "react";
 
 const FONT = "'Inter', sans-serif";
 
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+const PASS_HASH = "4d013ab6b7f57a5b84172aa0afb2f7d3125863c31c056df6f211471d722d4e90";
+
+async function hashPassword(pw) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pw));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+const MONTHS = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Août","Sep","Oct","Nov","Déc"];
+function sortTimeline(events) {
+  return [...events].sort((a, b) => {
+    const parse = d => {
+      const [m, y] = (d || "").split(" ");
+      return (parseInt(y) || 0) * 12 + (MONTHS.indexOf(m) === -1 ? 0 : MONTHS.indexOf(m));
+    };
+    return parse(a.date) - parse(b.date);
+  });
+}
+
 // ─── THÈME ────────────────────────────────────────────────────────────────────
 const T = {
   bg:          "#eef0f5",
@@ -134,6 +154,58 @@ Règles :
   const data = await response.json();
   const text = data.content.filter(b => b.type === "text").map(b => b.text).join("");
   return JSON.parse(text.replace(/```json|```/g, "").trim());
+}
+
+// ─── LOGIN SCREEN ─────────────────────────────────────────────────────────────
+function LoginScreen({ onAuth }) {
+  const [pw, setPw] = useState("");
+  const [err, setErr] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  const handleSubmit = async () => {
+    const h = await hashPassword(pw);
+    if (h === PASS_HASH) {
+      sessionStorage.setItem("mante_auth", "1");
+      onAuth();
+    } else {
+      setErr(true); setShake(true); setPw("");
+      setTimeout(() => setShake(false), 500);
+    }
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT }}>
+      <style>{`
+        @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-7px)} 40%,80%{transform:translateX(7px)} }
+        @keyframes fadein { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+      `}</style>
+      <div style={{ animation: "fadein 0.35s ease", textAlign: "center" }}>
+        <img src="./mante_logo_v5.svg" alt="MANTE" style={{ width: "200px", marginBottom: "32px" }} />
+        <div style={{
+          animation: shake ? "shake 0.45s ease" : "none",
+          background: T.surface, border: `1px solid ${err ? "#fca5a5" : T.border}`,
+          borderTop: "3px solid #22a855", borderRadius: "10px", padding: "32px",
+          width: "320px", boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+        }}>
+          <div style={{ fontSize: "13px", color: T.textSec, marginBottom: "20px" }}>Accès restreint — identifiez-vous</div>
+          <input type="password" value={pw} autoFocus
+            onChange={e => { setPw(e.target.value); setErr(false); }}
+            onKeyDown={e => e.key === "Enter" && handleSubmit()}
+            placeholder="Mot de passe"
+            style={{ width: "100%", boxSizing: "border-box", background: T.surfaceAlt,
+              border: `1px solid ${err ? "#fca5a5" : T.border}`, color: T.text,
+              fontFamily: FONT, fontSize: "14px", padding: "10px 14px", outline: "none",
+              borderRadius: "6px", marginBottom: err ? "10px" : "14px" }} />
+          {err && <div style={{ fontSize: "12px", color: "#dc2626", marginBottom: "12px" }}>Mot de passe incorrect</div>}
+          <button onClick={handleSubmit} style={{ width: "100%", background: "#22a855", border: "none",
+            color: "#fff", fontFamily: FONT, fontSize: "14px", fontWeight: 600,
+            padding: "10px", cursor: "pointer", borderRadius: "6px" }}>
+            Accéder
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ─── MINI TIMELINE ────────────────────────────────────────────────────────────
@@ -425,7 +497,7 @@ function EditModal({ project, onSave, onClose }) {
   };
   const addEvent = () => {
     if (!newEvent.label) return;
-    setForm(f => ({ ...f, timeline: [...f.timeline, { ...newEvent }] }));
+    setForm(f => ({ ...f, timeline: sortTimeline([...f.timeline, { ...newEvent }]) }));
     setNewEvent({ date: "", label: "" });
   };
 
@@ -584,6 +656,7 @@ function ApiKeyModal({ onSave, onClose }) {
 
 // ─── APP PRINCIPALE ───────────────────────────────────────────────────────────
 export default function App() {
+  const [auth, setAuth] = useState(() => sessionStorage.getItem("mante_auth") === "1");
   const [projects, setProjects] = useState(INITIAL_PROJECTS);
   const [selected, setSelected] = useState(null);
   const [editing, setEditing] = useState(null);
@@ -622,6 +695,8 @@ export default function App() {
 
   const activeCount = projects.filter(p => p.status === "active").length;
 
+  if (!auth) return <LoginScreen onAuth={() => setAuth(true)} />;
+
   return (
     <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: FONT, display: "flex", flexDirection: "column" }}>
 
@@ -629,7 +704,9 @@ export default function App() {
       <div style={{ background: T.surface, borderBottom: `1px solid ${T.border}`, padding: "14px 28px",
         display: "flex", alignItems: "center", justifyContent: "space-between",
         boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <img src="./mante_logo_v5.svg" alt="MANTE" style={{ height: "38px", display: "block" }} />
+          <span style={{ color: T.border }}>|</span>
           <span style={{ fontSize: "14px", fontWeight: 700, color: T.text }}>Alexandre Gordien</span>
           <span style={{ color: T.border }}>|</span>
           <span style={{ fontSize: "13px", color: T.textSec }}>Tableau de bord projets</span>

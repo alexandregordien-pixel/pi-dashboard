@@ -1,0 +1,51 @@
+<svg width="100%" viewBox="0 0 680 380" role="img" xmlns="http://www.w3.org/2000/svg" style="">
+<title style="fill:rgb(0, 0, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">Logo MANTE v5</title>
+<desc style="fill:rgb(0, 0, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">Logo minimaliste MANTE vue de dessus</desc>
+
+
+
+<!-- Ailes (derrière tout) -->
+<ellipse cx="282" cy="178" rx="52" ry="18" fill="#2ecc71" opacity="0.2" transform="rotate(-12 282 178)" style="fill:rgb(46, 204, 113);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.2;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<ellipse cx="398" cy="178" rx="52" ry="18" fill="#2ecc71" opacity="0.2" transform="rotate(12 398 178)" style="fill:rgb(46, 204, 113);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.2;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<!-- Antennes -->
+<path d="M326,98 Q300,75 280,58" stroke="#2ecc71" stroke-width="1.2" fill="none" stroke-linecap="round" style="fill:none;stroke:rgb(46, 204, 113);color:rgb(0, 0, 0);stroke-width:1.2px;stroke-linecap:round;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<path d="M354,98 Q380,75 400,58" stroke="#2ecc71" stroke-width="1.2" fill="none" stroke-linecap="round" style="fill:none;stroke:rgb(46, 204, 113);color:rgb(0, 0, 0);stroke-width:1.2px;stroke-linecap:round;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<circle cx="280" cy="58" r="2.5" fill="#2ecc71" style="fill:rgb(46, 204, 113);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<circle cx="400" cy="58" r="2.5" fill="#2ecc71" style="fill:rgb(46, 204, 113);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<!-- Tête triangulaire -->
+<polygon points="340,88 322,108 358,108" fill="#2ecc71" style="fill:rgb(46, 204, 113);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<!-- Cou -->
+<rect x="333" y="108" width="14" height="10" fill="#27ae60" style="fill:rgb(39, 174, 96);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<!-- Prothorax (épaules) -->
+<ellipse cx="340" cy="126" rx="22" ry="10" fill="#2ecc71" style="fill:rgb(46, 204, 113);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<!-- Bras avant gauche — replié vers le haut -->
+<path d="M320,120 L296,104 L304,92" stroke="#2ecc71" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" style="fill:none;stroke:rgb(46, 204, 113);color:rgb(0, 0, 0);stroke-width:3px;stroke-linecap:round;stroke-linejoin:round;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<!-- Bras avant droit -->
+<path d="M360,120 L384,104 L376,92" stroke="#2ecc71" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" style="fill:none;stroke:rgb(46, 204, 113);color:rgb(0, 0, 0);stroke-width:3px;stroke-linecap:round;stroke-linejoin:round;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<!-- Corps (abdomen ovale allongé) -->
+<ellipse cx="340" cy="185" rx="18" ry="52" fill="#2ecc71" style="fill:rgb(46, 204, 113);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<!-- Pattes milieu gauche -->
+<path d="M323,158 L292,168 L278,184" stroke="#2ecc71" stroke-width="1.8" fill="none" stroke-linecap="round" style="fill:none;stroke:rgb(46, 204, 113);color:rgb(0, 0, 0);stroke-width:1.8px;stroke-linecap:round;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<!-- Pattes milieu droite -->
+<path d="M357,158 L388,168 L402,184" stroke="#2ecc71" stroke-width="1.8" fill="none" stroke-linecap="round" style="fill:none;stroke:rgb(46, 204, 113);color:rgb(0, 0, 0);stroke-width:1.8px;stroke-linecap:round;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<!-- Pattes arrière gauche -->
+<path d="M323,195 L288,210 L272,232" stroke="#2ecc71" stroke-width="1.8" fill="none" stroke-linecap="round" style="fill:none;stroke:rgb(46, 204, 113);color:rgb(0, 0, 0);stroke-width:1.8px;stroke-linecap:round;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+<!-- Pattes arrière droite -->
+<path d="M357,195 L392,210 L408,232" stroke="#2ecc71" stroke-width="1.8" fill="none" stroke-linecap="round" style="fill:none;stroke:rgb(46, 204, 113);color:rgb(0, 0, 0);stroke-width:1.8px;stroke-linecap:round;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<!-- Pointe abdomen -->
+<polygon points="334,234 346,234 340,248" fill="#27ae60" style="fill:rgb(39, 174, 96);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<!-- MANTE -->
+<text x="340" y="290" text-anchor="middle" font-family="'Inter', sans-serif" font-size="30" font-weight="600" letter-spacing="8" fill="#1a1a1a" style="fill:rgb(26, 26, 26);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Inter, sans-serif;font-size:30px;font-weight:600;text-anchor:middle;dominant-baseline:auto">MANTE</text>
+<text x="340" y="312" text-anchor="middle" font-family="'Inter', sans-serif" font-size="10" letter-spacing="2" fill="#999" style="fill:rgb(153, 153, 153);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Inter, sans-serif;font-size:10px;font-weight:400;text-anchor:middle;dominant-baseline:auto">mapping · activités · notes · timeline · événements</text>
+
+</svg>
