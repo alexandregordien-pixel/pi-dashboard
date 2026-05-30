@@ -12,10 +12,6 @@ cp dist/assets/index-*.js /tmp/pi-build.js
 cp dist/index.html       /tmp/pi-index.html
 cp dist/mante_logo_v5.svg /tmp/pi-logo.svg
 
-# Nettoie les fichiers qui bloqueraient le checkout gh-pages
-rm -f mante_logo_v5.svg
-rm -rf public/
-
 git stash 2>/dev/null || true
 git checkout gh-pages
 
