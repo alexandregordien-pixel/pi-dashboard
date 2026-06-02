@@ -51,7 +51,7 @@ const INITIAL_PROJECTS = [
       { date: "Mar 2025", label: "Architecture v2 conçue" },
       { date: "Mai 2025", label: "Présentation CSIRMT" },
     ],
-    color: "#00b4cc", createdAt: "2025-01",
+    color: "#00b4cc", createdAt: "2025-01", notes: "",
   },
   {
     id: 2, code: "RIFC", name: "RIFC AFGSU",
@@ -67,7 +67,7 @@ const INITIAL_PROJECTS = [
       { date: "Avr 2025", label: "Génération RIFC complet" },
       { date: "Avr 2025", label: "Livraison finale" },
     ],
-    color: "#22a855", createdAt: "2025-03",
+    color: "#22a855", createdAt: "2025-03", notes: "",
   },
   {
     id: 3, code: "CCS", name: "Concours Cadre de Santé",
@@ -83,7 +83,7 @@ const INITIAL_PROJECTS = [
       { date: "Sep 2025", label: "CV & compétences 2026" },
       { date: "Jan 2026", label: "Stratégie TOEIC + M1 ERCE" },
     ],
-    color: "#d4a017", createdAt: "2025-02",
+    color: "#d4a017", createdAt: "2025-02", notes: "",
   },
   {
     id: 4, code: "AFGM", name: "AFGSU-Manager",
@@ -95,7 +95,7 @@ const INITIAL_PROJECTS = [
       { date: "Avr 2025", label: "Démarrage" },
       { date: "Juin 2025", label: "Audit structurel Grist" },
     ],
-    color: "#e05a00", createdAt: "2025-04",
+    color: "#e05a00", createdAt: "2025-04", notes: "",
   },
   {
     id: 5, code: "DASH", name: "Pi Dashboard",
@@ -107,7 +107,7 @@ const INITIAL_PROJECTS = [
       { date: "Mai 2026", label: "Démarrage" },
       { date: "Mai 2026", label: "v1 déployée" },
     ],
-    color: "#9c27b0", createdAt: "2026-05",
+    color: "#9c27b0", createdAt: "2026-05", notes: "",
   },
 ];
 
@@ -179,8 +179,8 @@ function LoginScreen({ onAuth }) {
         @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-7px)} 40%,80%{transform:translateX(7px)} }
         @keyframes fadein { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
-      <div style={{ animation: "fadein 0.35s ease", textAlign: "center" }}>
-        <img src="./mante_logo_v5.svg" alt="MANTE" style={{ width: "200px", marginBottom: "32px" }} />
+      <div style={{ animation: "fadein 0.35s ease", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <img src="./mante_logo_v5.svg" alt="MANTE" style={{ width: "min(520px, 80vw)", marginBottom: "36px" }} />
         <div style={{
           animation: shake ? "shake 0.45s ease" : "none",
           background: T.surface, border: `1px solid ${err ? "#fca5a5" : T.border}`,
@@ -350,7 +350,7 @@ function ProjectCard({ project, selected, onSelect, onEdit }) {
 }
 
 // ─── DETAIL PANEL ─────────────────────────────────────────────────────────────
-function DetailPanel({ project }) {
+function DetailPanel({ project, onUpdateNotes }) {
   if (!project) return (
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -362,49 +362,41 @@ function DetailPanel({ project }) {
   );
 
   const s = STATUS[project.status];
+  const sectionLabel = (txt) => (
+    <div style={{ fontFamily: FONT, fontSize: "11px", fontWeight: 600, color: T.textMuted,
+      textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px" }}>{txt}</div>
+  );
 
   return (
-    <div style={{ padding: "28px 32px" }}>
+    <div style={{ padding: "24px 28px" }}>
 
       {/* Header */}
-      <div style={{ marginBottom: "28px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-          <span style={{
-            fontFamily: FONT, fontSize: "11px", fontWeight: 700,
+      <div style={{ marginBottom: "24px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
+          <span style={{ fontFamily: FONT, fontSize: "11px", fontWeight: 700,
             color: project.color, background: `${project.color}18`,
-            padding: "3px 10px", borderRadius: "4px", letterSpacing: "0.5px",
-          }}>{project.code}</span>
+            padding: "3px 10px", borderRadius: "4px", letterSpacing: "0.5px" }}>{project.code}</span>
           <span style={{ fontFamily: FONT, fontWeight: 700, fontSize: "20px", color: T.text }}>{project.name}</span>
-          <span style={{
-            marginLeft: "auto", fontFamily: FONT, fontSize: "11px", fontWeight: 500,
-            color: s.color, background: s.bg, padding: "3px 10px", borderRadius: "20px",
-          }}>{s.label}</span>
+          <span style={{ marginLeft: "auto", fontFamily: FONT, fontSize: "11px", fontWeight: 500,
+            color: s.color, background: s.bg, padding: "3px 10px", borderRadius: "20px" }}>{s.label}</span>
         </div>
         <p style={{ fontFamily: FONT, fontSize: "13px", color: T.textSec, margin: 0, lineHeight: 1.7 }}>
           {project.description}
         </p>
       </div>
 
-      {/* Timeline complète */}
+      {/* 1. TIMELINE */}
       {project.timeline && project.timeline.length > 0 && (
-        <div style={{ marginBottom: "28px" }}>
-          <div style={{ fontFamily: FONT, fontSize: "11px", fontWeight: 600, color: T.textMuted,
-            textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>
-            Chronologie
-          </div>
+        <div style={{ marginBottom: "24px" }}>
+          {sectionLabel("Chronologie")}
           <div style={{ position: "relative", paddingLeft: "16px" }}>
-            {/* Ligne verticale */}
-            <div style={{
-              position: "absolute", left: "4px", top: "6px", bottom: "6px",
-              width: "2px", background: `${project.color}25`, borderRadius: "1px",
-            }} />
+            <div style={{ position: "absolute", left: "4px", top: "6px", bottom: "6px",
+              width: "2px", background: `${project.color}25`, borderRadius: "1px" }} />
             {project.timeline.map((e, i) => (
-              <div key={i} style={{ display: "flex", gap: "14px", alignItems: "flex-start", marginBottom: "14px", position: "relative" }}>
-                <div style={{
-                  position: "absolute", left: "-20px", top: "4px",
+              <div key={i} style={{ display: "flex", gap: "14px", alignItems: "flex-start", marginBottom: "12px", position: "relative" }}>
+                <div style={{ position: "absolute", left: "-20px", top: "4px",
                   width: "10px", height: "10px", borderRadius: "50%",
-                  background: T.surface, border: `2px solid ${project.color}`,
-                }} />
+                  background: T.surface, border: `2px solid ${project.color}` }} />
                 <div>
                   <span style={{ fontFamily: FONT, fontSize: "11px", fontWeight: 600, color: project.color }}>{e.date}</span>
                   <span style={{ fontFamily: FONT, fontSize: "13px", color: T.textSec, marginLeft: "10px" }}>{e.label}</span>
@@ -415,14 +407,61 @@ function DetailPanel({ project }) {
         </div>
       )}
 
-      {/* Conversations */}
-      <div style={{ marginBottom: "24px" }}>
-        <div style={{ fontFamily: FONT, fontSize: "11px", fontWeight: 600, color: T.textMuted,
-          textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px" }}>
-          Conversations Claude
+      {/* 2. GITHUB */}
+      {project.links.github && (
+        <div style={{ marginBottom: "24px" }}>
+          {sectionLabel("GitHub")}
+          <a href={project.links.github} target="_blank" rel="noopener noreferrer" style={{
+            display: "flex", alignItems: "center", gap: "10px",
+            fontFamily: FONT, fontSize: "13px", color: T.textSec,
+            textDecoration: "none", padding: "10px 14px",
+            background: T.surfaceAlt, border: `1px solid ${T.border}`,
+            borderRadius: "6px", wordBreak: "break-all",
+          }}>
+            <span>⌥</span>{project.links.github.replace("https://", "")}
+          </a>
         </div>
+      )}
+
+      {project.links.docs && (
+        <div style={{ marginBottom: "24px" }}>
+          {sectionLabel("Documentation")}
+          <a href={project.links.docs} target="_blank" rel="noopener noreferrer" style={{
+            display: "flex", alignItems: "center", gap: "10px",
+            fontFamily: FONT, fontSize: "13px", color: T.textSec,
+            textDecoration: "none", padding: "10px 14px",
+            background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: "6px",
+          }}>
+            <span>⊞</span>{project.links.docs.replace("https://", "")}
+          </a>
+        </div>
+      )}
+
+      {/* 3. NOTES */}
+      <div style={{ marginBottom: "24px" }}>
+        {sectionLabel("Notes")}
+        <textarea
+          value={project.notes || ""}
+          onChange={e => onUpdateNotes(project.id, e.target.value)}
+          placeholder="Ajouter des notes sur ce projet…"
+          style={{
+            width: "100%", boxSizing: "border-box",
+            height: "130px", resize: "none", overflowY: "auto",
+            background: T.surfaceAlt, border: `1px solid ${T.border}`,
+            borderRadius: "6px", padding: "12px 14px",
+            fontFamily: FONT, fontSize: "13px", color: T.text,
+            lineHeight: 1.6, outline: "none",
+          }}
+          onFocus={e => e.target.style.borderColor = T.borderFocus}
+          onBlur={e => e.target.style.borderColor = T.border}
+        />
+      </div>
+
+      {/* 4. CONVERSATIONS CLAUDE */}
+      <div style={{ marginBottom: "8px" }}>
+        {sectionLabel("Conversations Claude")}
         {project.conversations.length === 0
-          ? <p style={{ fontFamily: FONT, fontSize: "13px", color: T.textMuted }}>Aucune conversation.</p>
+          ? <p style={{ fontFamily: FONT, fontSize: "13px", color: T.textMuted, margin: 0 }}>Aucune conversation.</p>
           : project.conversations.map((c, i) => (
             <a key={i} href={c.url} target="_blank" rel="noopener noreferrer" style={{
               display: "flex", alignItems: "center", gap: "10px",
@@ -434,50 +473,10 @@ function DetailPanel({ project }) {
             }}
               onMouseEnter={e => { e.currentTarget.style.background = "#eef6ff"; e.currentTarget.style.color = T.text; }}
               onMouseLeave={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.color = T.textSec; }}>
-              <span style={{ color: project.color, fontSize: "12px" }}>↗</span>
-              {c.label}
+              <span style={{ color: project.color, fontSize: "12px" }}>↗</span>{c.label}
             </a>
           ))}
       </div>
-
-      {/* Liens */}
-      {project.links.github && (
-        <div style={{ marginBottom: "18px" }}>
-          <div style={{ fontFamily: FONT, fontSize: "11px", fontWeight: 600, color: T.textMuted,
-            textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px" }}>
-            GitHub
-          </div>
-          <a href={project.links.github} target="_blank" rel="noopener noreferrer" style={{
-            display: "flex", alignItems: "center", gap: "10px",
-            fontFamily: FONT, fontSize: "13px", color: T.textSec,
-            textDecoration: "none", padding: "10px 14px",
-            background: T.surfaceAlt, border: `1px solid ${T.border}`,
-            borderRadius: "6px", wordBreak: "break-all",
-          }}>
-            <span>⌥</span>
-            {project.links.github.replace("https://", "")}
-          </a>
-        </div>
-      )}
-
-      {project.links.docs && (
-        <div>
-          <div style={{ fontFamily: FONT, fontSize: "11px", fontWeight: 600, color: T.textMuted,
-            textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px" }}>
-            Documentation
-          </div>
-          <a href={project.links.docs} target="_blank" rel="noopener noreferrer" style={{
-            display: "flex", alignItems: "center", gap: "10px",
-            fontFamily: FONT, fontSize: "13px", color: T.textSec,
-            textDecoration: "none", padding: "10px 14px",
-            background: T.surfaceAlt, border: `1px solid ${T.border}`,
-            borderRadius: "6px",
-          }}>
-            <span>⊞</span>
-            {project.links.docs.replace("https://", "")}
-          </a>
-        </div>
-      )}
     </div>
   );
 }
@@ -657,7 +656,15 @@ function ApiKeyModal({ onSave, onClose }) {
 // ─── APP PRINCIPALE ───────────────────────────────────────────────────────────
 export default function App() {
   const [auth, setAuth] = useState(() => sessionStorage.getItem("mante_auth") === "1");
-  const [projects, setProjects] = useState(INITIAL_PROJECTS);
+  const [projects, setProjects] = useState(() => {
+    // TODO: remplacer par fetch() vers API Node.js/SQLite sur Raspberry Pi
+    try {
+      const saved = localStorage.getItem("mante_projects");
+      return saved ? JSON.parse(saved) : INITIAL_PROJECTS;
+    } catch {
+      return INITIAL_PROJECTS;
+    }
+  });
   const [selected, setSelected] = useState(null);
   const [editing, setEditing] = useState(null);
   const [filter, setFilter] = useState("all");
@@ -674,6 +681,11 @@ export default function App() {
   useEffect(() => {
     if (historyRef.current) historyRef.current.scrollTop = historyRef.current.scrollHeight;
   }, [cmdHistory]);
+
+  // TODO: remplacer par PUT /api/projects vers API Node.js/SQLite sur Raspberry Pi
+  useEffect(() => {
+    try { localStorage.setItem("mante_projects", JSON.stringify(projects)); } catch {}
+  }, [projects]);
 
   const handleCmd = async () => {
     if (!cmd.trim()) return;
@@ -698,14 +710,14 @@ export default function App() {
   if (!auth) return <LoginScreen onAuth={() => setAuth(true)} />;
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: FONT, display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "100vh", overflow: "hidden", background: T.bg, color: T.text, fontFamily: FONT, display: "flex", flexDirection: "column" }}>
 
       {/* HEADER */}
-      <div style={{ background: T.surface, borderBottom: `1px solid ${T.border}`, padding: "14px 28px",
+      <div style={{ background: T.surface, borderBottom: `1px solid ${T.border}`, padding: "4px 20px",
         display: "flex", alignItems: "center", justifyContent: "space-between",
         boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <img src="./mante_logo_v5.svg" alt="MANTE" style={{ height: "38px", display: "block" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <img src="./mante_icon.svg" alt="MANTE" style={{ height: "52px", display: "block" }} />
           <span style={{ color: T.border }}>|</span>
           <span style={{ fontSize: "14px", fontWeight: 700, color: T.text }}>Alexandre Gordien</span>
           <span style={{ color: T.border }}>|</span>
@@ -741,6 +753,18 @@ export default function App() {
             onMouseLeave={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.color = T.textSec; }}>
             + Nouveau
           </button>
+          <button onClick={() => {
+            if (window.confirm("Réinitialiser tous les projets ?")) {
+              localStorage.removeItem("mante_projects");
+              setProjects(INITIAL_PROJECTS);
+            }
+          }} style={{
+            background: "none", border: "none", color: T.textMuted,
+            fontFamily: FONT, fontSize: "11px", cursor: "pointer", padding: "4px 6px",
+          }}
+            onMouseEnter={e => e.currentTarget.style.color = "#dc2626"}
+            onMouseLeave={e => e.currentTarget.style.color = T.textMuted}
+            title="Réinitialiser les données">↺</button>
         </div>
       </div>
 
@@ -773,7 +797,8 @@ export default function App() {
 
         {/* DÉTAIL */}
         <div style={{ overflowY: "auto", background: T.surface }}>
-          <DetailPanel project={selectedProject} />
+          <DetailPanel project={selectedProject}
+            onUpdateNotes={(id, notes) => setProjects(ps => ps.map(p => p.id === id ? { ...p, notes } : p))} />
         </div>
       </div>
 
@@ -804,7 +829,7 @@ export default function App() {
             value={cmd}
             onChange={e => setCmd(e.target.value)}
             onKeyDown={e => e.key === "Enter" && !loading && handleCmd()}
-            placeholder={apiKey ? "Crée un projet... / Ajoute un événement... / Résume les projets actifs..." : "Configure la clé API pour activer l'assistant →"}
+            placeholder={apiKey ? "Crée un projet… / Ajoute un événement… / Résume les projets actifs…" : "Configure la clé API pour activer l'assistant →"}
             disabled={loading}
             style={{ flex: 1, background: "none", border: "none", color: T.text,
               fontFamily: FONT, fontSize: "13px", outline: "none", opacity: loading ? 0.5 : 1 }}

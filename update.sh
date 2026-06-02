@@ -11,6 +11,7 @@ JSFILE=$(basename dist/assets/index-*.js)
 cp dist/assets/index-*.js /tmp/pi-build.js
 cp dist/index.html       /tmp/pi-index.html
 cp dist/mante_logo_v5.svg /tmp/pi-logo.svg
+cp dist/mante_icon.svg /tmp/pi-icon.svg
 
 git stash 2>/dev/null || true
 git checkout gh-pages
@@ -19,9 +20,10 @@ rm -f assets/index-*.js
 cp /tmp/pi-build.js   assets/$JSFILE
 cp /tmp/pi-index.html index.html
 cp /tmp/pi-logo.svg   mante_logo_v5.svg
+cp /tmp/pi-icon.svg   mante_icon.svg
 
 echo -e "${CYAN}[3/4] Commit...${NC}"
-git add index.html assets/$JSFILE mante_logo_v5.svg
+git add index.html assets/$JSFILE mante_logo_v5.svg mante_icon.svg
 git commit -m "$MSG" 2>/dev/null || echo "  (rien à commiter)"
 
 echo -e "${CYAN}[4/4] Push...${NC}"
