@@ -656,15 +656,9 @@ function ApiKeyModal({ onSave, onClose }) {
 // ─── APP PRINCIPALE ───────────────────────────────────────────────────────────
 export default function App() {
   const [auth, setAuth] = useState(() => sessionStorage.getItem("mante_auth") === "1");
-  const [projects, setProjects] = useState(() => {
-    // TODO: remplacer par fetch() vers API Node.js/SQLite sur Raspberry Pi
-    try {
-      const saved = localStorage.getItem("mante_projects");
-      return saved ? JSON.parse(saved) : INITIAL_PROJECTS;
-    } catch {
-      return INITIAL_PROJECTS;
-    }
-  });
+  const [projects, setProjects] = useState(INITIAL_PROJECTS);
+  const [loaded, setLoaded] = useState(false);
+  const [apiStatus, setApiStatus] = useState("unknown"); // "ok" | "offline" | "unknown"
   const [selected, setSelected] = useState(null);
   const [editing, setEditing] = useState(null);
   const [filter, setFilter] = useState("all");
@@ -682,10 +676,36 @@ export default function App() {
     if (historyRef.current) historyRef.current.scrollTop = historyRef.current.scrollHeight;
   }, [cmdHistory]);
 
-  // TODO: remplacer par PUT /api/projects vers API Node.js/SQLite sur Raspberry Pi
+  // Chargement initial : API SQLite en priorité, localStorage en fallback
   useEffect(() => {
-    try { localStorage.setItem("mante_projects", JSON.stringify(projects)); } catch {}
-  }, [projects]);
+    fetch("/api/projects")
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(data => {
+        setProjects(data.length > 0 ? data : INITIAL_PROJECTS);
+        setApiStatus("ok");
+        setLoaded(true);
+      })
+      .catch(() => {
+        try {
+          const saved = localStorage.getItem("mante_projects");
+          if (saved) setProjects(JSON.parse(saved));
+        } catch {}
+        setApiStatus("offline");
+        setLoaded(true);
+      });
+  }, []);
+
+  // Sauvegarde : API SQLite en priorité, localStorage en fallback
+  useEffect(() => {
+    if (!loaded) return;
+    fetch("/api/projects", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(projects),
+    }).catch(() => {
+      try { localStorage.setItem("mante_projects", JSON.stringify(projects)); } catch {}
+    });
+  }, [projects, loaded]);
 
   const handleCmd = async () => {
     if (!cmd.trim()) return;
@@ -727,6 +747,10 @@ export default function App() {
           <span style={{ fontSize: "12px", color: T.textMuted }}>
             {activeCount} actifs · {projects.length} total
           </span>
+          <span title={apiStatus === "ok" ? "SQLite connecté" : apiStatus === "offline" ? "Fallback localStorage" : "Connexion..."} style={{
+            width: "8px", height: "8px", borderRadius: "50%", display: "inline-block",
+            background: apiStatus === "ok" ? "#22a855" : apiStatus === "offline" ? "#f59e0b" : "#9ca3af",
+          }} />
           <button onClick={() => setShowApiModal(true)} style={{
             background: apiKey ? "#e0f2fe" : T.surfaceAlt,
             border: `1px solid ${apiKey ? "#bae6fd" : T.border}`,
@@ -756,7 +780,9 @@ export default function App() {
           <button onClick={() => {
             if (window.confirm("Réinitialiser tous les projets ?")) {
               localStorage.removeItem("mante_projects");
+              setLoaded(false);
               setProjects(INITIAL_PROJECTS);
+              setLoaded(true);
             }
           }} style={{
             background: "none", border: "none", color: T.textMuted,

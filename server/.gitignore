@@ -1,0 +1,4 @@
+node_modules/
+mante.db
+mante.db-shm
+mante.db-wal
