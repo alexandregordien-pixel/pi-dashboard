@@ -118,8 +118,8 @@ const STATUS = {
   archived: { label: "Archivé",    color: "#6b7280", bg: "#f3f4f6" },
 };
 
-// ─── CLAUDE API ───────────────────────────────────────────────────────────────
-async function askClaude(userMessage, projects, apiKey) {
+// ─── CLAUDE API (proxy via serveur berry) ────────────────────────────────────
+async function askClaude(userMessage, projects) {
   const systemPrompt = `Tu es l'assistant de gestion de projets d'Alexandre Gordien.
 Tu gères un dashboard de projets. Voici l'état actuel des projets en JSON :
 ${JSON.stringify(projects, null, 2)}
@@ -139,19 +139,14 @@ Règles :
 - Chaque projet a un champ timeline : tableau d'objets { date: "Mois YYYY", label: "Description" }
 - JAMAIS de texte hors du JSON`;
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("/api/claude", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1500,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userMessage }],
-    }),
+    body: JSON.stringify({ message: userMessage, systemPrompt }),
   });
 
-  if (!response.ok) throw new Error(`API error: ${response.status}`);
   const data = await response.json();
+  if (!response.ok) throw new Error(data.error || `Erreur ${response.status}`);
   const text = data.content.filter(b => b.type === "text").map(b => b.text).join("");
   return JSON.parse(text.replace(/```json|```/g, "").trim());
 }
@@ -628,7 +623,7 @@ function ApiKeyModal({ onSave, onClose }) {
         </div>
         <p style={{ fontSize: "13px", color: T.textSec, lineHeight: 1.7, marginBottom: "20px" }}>
           Pour activer l'assistant Claude dans le dashboard, entre ta clé API Anthropic.
-          Elle sera stockée uniquement en mémoire de session (non persistée).
+          Elle sera stockée dans la base SQLite sur berry (persistée, jamais renvoyée au navigateur).
         </p>
         <input value={key} onChange={e => setKey(e.target.value)}
           type="password" placeholder="sk-ant-api03-..."
@@ -676,6 +671,14 @@ export default function App() {
     if (historyRef.current) historyRef.current.scrollTop = historyRef.current.scrollHeight;
   }, [cmdHistory]);
 
+  // Vérifie si une clé API est déjà stockée sur le serveur
+  useEffect(() => {
+    fetch("/api/settings")
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(s => { if (s.hasApiKey) setApiKey("[stored]"); })
+      .catch(() => {});
+  }, []);
+
   // Chargement initial : API SQLite en priorité, localStorage en fallback
   useEffect(() => {
     fetch("/api/projects")
@@ -715,7 +718,7 @@ export default function App() {
     setCmdHistory(h => [...h, { role: "user", text: userMsg }]);
     setLoading(true);
     try {
-      const result = await askClaude(userMsg, projects, apiKey);
+      const result = await askClaude(userMsg, projects);
       if (result.action === "update") setProjects(result.projects);
       setCmdHistory(h => [...h, { role: "assistant", text: result.message }]);
     } catch (e) {
@@ -882,7 +885,12 @@ export default function App() {
       {editing && <EditModal project={editing}
         onSave={updated => { setProjects(ps => ps.map(p => p.id === updated.id ? updated : p)); setEditing(null); }}
         onClose={() => setEditing(null)} />}
-      {showApiModal && <ApiKeyModal onSave={k => { setApiKey(k); setShowApiModal(false); }} onClose={() => setShowApiModal(false)} />}
+      {showApiModal && <ApiKeyModal onSave={k => {
+        fetch("/api/settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ apiKey: k }) })
+          .catch(() => {});
+        setApiKey("[stored]");
+        setShowApiModal(false);
+      }} onClose={() => setShowApiModal(false)} />}
     </div>
   );
 }

@@ -14,6 +14,12 @@ app.use(express.json({ limit: "10mb" }));
 // ─── BASE DE DONNÉES ──────────────────────────────────────────────────────────
 const db = new DatabaseSync(DB_PATH);
 db.exec(`
+  CREATE TABLE IF NOT EXISTS settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  )
+`);
+db.exec(`
   CREATE TABLE IF NOT EXISTS projects (
     id          INTEGER PRIMARY KEY,
     code        TEXT    DEFAULT '',
@@ -123,6 +129,55 @@ app.put("/api/projects", (req, res) => {
     res.json({ ok: true, count: projects.length });
   } catch (err) {
     db.exec("ROLLBACK");
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── SETTINGS (clé API) ───────────────────────────────────────────────────────
+app.get("/api/settings", (_req, res) => {
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'api_key'").get();
+  res.json({ hasApiKey: !!row });
+});
+
+app.put("/api/settings", (req, res) => {
+  const { apiKey } = req.body;
+  if (!apiKey || typeof apiKey !== "string") {
+    return res.status(400).json({ error: "apiKey requis" });
+  }
+  db.prepare(
+    "INSERT OR REPLACE INTO settings (key, value) VALUES ('api_key', ?)"
+  ).run(apiKey.trim());
+  res.json({ ok: true });
+});
+
+// ─── PROXY CLAUDE ─────────────────────────────────────────────────────────────
+app.post("/api/claude", async (req, res) => {
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'api_key'").get();
+  if (!row) return res.status(401).json({ error: "Clé API non configurée sur le serveur" });
+
+  const { message, systemPrompt } = req.body;
+  if (!message) return res.status(400).json({ error: "message requis" });
+
+  try {
+    const upstream = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type":      "application/json",
+        "x-api-key":         row.value,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model:      "claude-sonnet-4-6",
+        max_tokens: 4096,
+        system:     systemPrompt,
+        messages:   [{ role: "user", content: message }],
+      }),
+    });
+
+    const data = await upstream.json();
+    if (!upstream.ok) return res.status(upstream.status).json(data);
+    res.json(data);
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
