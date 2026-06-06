@@ -719,7 +719,17 @@ export default function App() {
     setLoading(true);
     try {
       const result = await askClaude(userMsg, projects);
-      if (result.action === "update") setProjects(result.projects);
+      if (result.action === "update") {
+        setProjects(prev => {
+          const claudeMap = new Map(result.projects.map(p => [p.id, p]));
+          // Met à jour les projets que Claude a touchés, préserve les autres
+          const merged = prev.map(p => claudeMap.has(p.id) ? claudeMap.get(p.id) : p);
+          // Ajoute les nouveaux projets créés par Claude
+          const prevIds = new Set(prev.map(p => p.id));
+          const added = result.projects.filter(p => !prevIds.has(p.id));
+          return [...merged, ...added];
+        });
+      }
       setCmdHistory(h => [...h, { role: "assistant", text: result.message }]);
     } catch (e) {
       setCmdHistory(h => [...h, { role: "error", text: `Erreur : ${e.message}` }]);
