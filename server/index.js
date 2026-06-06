@@ -102,11 +102,15 @@ app.put("/api/projects", (req, res) => {
   try {
     db.exec("BEGIN");
 
-    // Supprimer les projets qui ne sont plus dans la liste
     const ids = projects.map((p) => p.id);
-    db.prepare(
-      `DELETE FROM projects WHERE id NOT IN (${ids.map(() => "?").join(",")})`
-    ).run(...ids);
+
+    if (ids.length > 0) {
+      db.prepare(
+        `DELETE FROM projects WHERE id NOT IN (${ids.map(() => "?").join(",")})`
+      ).run(...ids);
+    } else {
+      db.prepare("DELETE FROM projects").run();
+    }
 
     for (const p of projects) {
       upsert.run({
@@ -126,9 +130,11 @@ app.put("/api/projects", (req, res) => {
     }
 
     db.exec("COMMIT");
+    console.log(`[PUT /api/projects] ${ids.length} projets sauvegardés`);
     res.json({ ok: true, count: projects.length });
   } catch (err) {
     db.exec("ROLLBACK");
+    console.error(`[PUT /api/projects] ERREUR:`, err.message);
     res.status(500).json({ error: err.message });
   }
 });
