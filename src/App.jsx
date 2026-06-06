@@ -748,9 +748,14 @@ export default function App() {
             {activeCount} actifs · {projects.length} total
           </span>
           <span title={apiStatus === "ok" ? "SQLite connecté" : apiStatus === "offline" ? "Fallback localStorage" : "Connexion..."} style={{
-            width: "8px", height: "8px", borderRadius: "50%", display: "inline-block",
-            background: apiStatus === "ok" ? "#22a855" : apiStatus === "offline" ? "#f59e0b" : "#9ca3af",
-          }} />
+            fontSize: "11px", fontFamily: FONT, fontWeight: 500,
+            padding: "3px 8px", borderRadius: "10px",
+            background: apiStatus === "ok" ? "#dcfce7" : "#f3f4f6",
+            color: apiStatus === "ok" ? "#15803d" : "#6b7280",
+            border: `1px solid ${apiStatus === "ok" ? "#bbf7d0" : "#e5e7eb"}`,
+          }}>
+            {apiStatus === "ok" ? "● SQLite" : apiStatus === "offline" ? "○ local" : "○ …"}
+          </span>
           <button onClick={() => setShowApiModal(true)} style={{
             background: apiKey ? "#e0f2fe" : T.surfaceAlt,
             border: `1px solid ${apiKey ? "#bae6fd" : T.border}`,
